@@ -21,7 +21,8 @@ export function AddDeviceModal({
     esp32: '',
     sockets: 1,
     isDedicated: false,
-    voltage: 230,
+    minVoltage: 200,
+    maxVoltage: 240,
     power: 0
   });
   if (!isOpen) return null;
@@ -43,7 +44,8 @@ export function AddDeviceModal({
       esp32: '',
       sockets: 1,
       isDedicated: false,
-      voltage: 230,
+      minVoltage: 200,
+      maxVoltage: 240,
       power: 0
     });
   };
@@ -160,15 +162,26 @@ export function AddDeviceModal({
                       Use for dedicated device
                     </label>
                   </div>
-                  {formData.isDedicated && <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Voltage (V)
-                        </label>
-                        <input type="number" value={formData.voltage} onChange={e => setFormData({
-                  ...formData,
-                  voltage: parseFloat(e.target.value)
-                })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  {formData.isDedicated && <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Min Voltage (V)
+                          </label>
+                          <input type="number" value={formData.minVoltage} onChange={e => setFormData({
+                    ...formData,
+                    minVoltage: parseFloat(e.target.value)
+                  })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Max Voltage (V)
+                          </label>
+                          <input type="number" value={formData.maxVoltage} onChange={e => setFormData({
+                    ...formData,
+                    maxVoltage: parseFloat(e.target.value)
+                  })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">

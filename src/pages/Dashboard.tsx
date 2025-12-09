@@ -2,6 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ZapIcon, ActivityIcon, PowerIcon, PlusIcon, ListOrderedIcon, SearchIcon } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+interface DashboardProps {
+  zones: any[];
+}
+
 const mockPowerData = [{
   time: '00:00',
   power: 45
@@ -21,61 +26,26 @@ const mockPowerData = [{
   time: '20:00',
   power: 62
 }];
-const mockZones = [{
-  id: 1,
-  name: 'Industrial',
-  devices: [{
-    id: 1,
-    name: 'Main Conveyor',
+
+export function Dashboard({ zones }: DashboardProps) {
+  const [devices, setDevices] = useState(zones.flatMap(zone => zone.devices.map(device => ({
+    id: device.id,
+    name: device.name,
+    zone: zone.name,
     status: true,
-    power: 15.2
-  }, {
-    id: 2,
-    name: 'Packaging Unit',
-    status: true,
-    power: 8.5
-  }, {
-    id: 3,
-    name: 'Air Compressor',
-    status: false,
-    power: 0
-  }]
-}, {
-  id: 2,
-  name: 'Workshop 1',
-  devices: [{
-    id: 4,
-    name: 'CNC Machine',
-    status: true,
-    power: 22.3
-  }, {
-    id: 5,
-    name: 'Welding Station',
-    status: false,
-    power: 0
-  }]
-}, {
-  id: 3,
-  name: 'Workshop 2',
-  devices: [{
-    id: 6,
-    name: 'Drill Press',
-    status: true,
-    power: 5.8
-  }, {
-    id: 7,
-    name: 'Lathe Machine',
-    status: true,
-    power: 12.1
-  }]
-}];
-export function Dashboard() {
-  const [devices, setDevices] = useState(mockZones.flatMap(zone => zone.devices.map(device => ({
-    ...device,
-    zone: zone.name
+    power: device.power
   }))));
+  const [zoneStatus, setZoneStatus] = useState<{ [key: number]: boolean }>(
+    zones.reduce((acc, zone) => ({ ...acc, [zone.id]: true }), {})
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const totalPower = devices.reduce((sum, device) => sum + device.power, 0);
+  const toggleZone = (zoneId: number) => {
+    setZoneStatus(prev => ({
+      ...prev,
+      [zoneId]: !prev[zoneId]
+    }));
+  };
   const toggleDevice = (deviceId: number) => {
     setDevices(devices.map(device => device.id === deviceId ? {
       ...device,
@@ -83,9 +53,6 @@ export function Dashboard() {
     } : device));
   };
   const filteredDevices = devices.filter(device => device.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  const getZoneStatus = (zoneName: string) => {
-    return devices.some(d => d.zone === zoneName && d.status);
-  };
   return <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
@@ -137,14 +104,19 @@ export function Dashboard() {
       <div className="mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Zones</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {mockZones.map(zone => <div key={zone.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                {zone.name}
-              </h3>
+          {zones.map(zone => <div key={zone.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {zone.name}
+                </h3>
+                <button onClick={() => toggleZone(zone.id)} className={`relative w-12 h-6 rounded-full transition-colors ${zoneStatus[zone.id] ? 'bg-green-500' : 'bg-gray-300'}`}>
+                  <div className={`absolute w-5 h-5 bg-white rounded-full top-0.5 transition-transform ${zoneStatus[zone.id] ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
               <div className="space-y-3">
                 {zone.devices.map(device => <div key={device.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${device.status ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <div className={`w-2 h-2 rounded-full ${zoneStatus[zone.id] ? 'bg-green-500' : 'bg-gray-300'}`} />
                       <span className="text-sm text-gray-700">
                         {device.name}
                       </span>
@@ -208,18 +180,15 @@ export function Dashboard() {
       <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Zone Status</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {mockZones.map(zone => {
-          const isActive = getZoneStatus(zone.name);
-          return <div key={zone.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+          {zones.map(zone => <div key={zone.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                 <span className="font-medium text-gray-900">{zone.name}</span>
                 <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div className={`w-3 h-3 rounded-full ${zoneStatus[zone.id] ? 'bg-green-500' : 'bg-red-500'}`} />
                   <span className="text-sm text-gray-600">
-                    {isActive ? 'Active' : 'Inactive'}
+                    {zoneStatus[zone.id] ? 'Active' : 'Inactive'}
                   </span>
                 </div>
-              </div>;
-        })}
+              </div>)}
         </div>
       </div>
     </div>;
